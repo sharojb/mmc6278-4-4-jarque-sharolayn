@@ -1,0 +1,31 @@
+{
+  "name": "solved",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "npm run mysql:start:seed && node db_check.js && node index.js; npm run mysql:stop",
+    "test": "npm run mysql:stop; npm run mysql:start:seed && npm run mysql:copy && node db_check.js && mocha test/test.js --diff=false $FLAG --exit; npm run mysql:stop",
+    "test:watch": "export FLAG='--watch --watch-files \"queries/*.sql\"' && npm test",
+    "test:watch:debug": "export FLAG='--watch' DEBUG=true && npm test",
+    "mysql:start": "npm run mysql:stop; npm run mysql:run && npm run mysql:copy",
+    "mysql:start:seed": "npm run mysql:stop; export DB_NAME='-e MYSQL_DATABASE=music_db' VOLUME=\"-v $(pwd)/schema:/docker-entrypoint-initdb.d\" && npm run mysql:run",
+    "mysql:run": "docker run -d --rm -p 3306:3306 $VOLUME --name=mysql-sandbox -e MYSQL_ALLOW_EMPTY_PASSWORD=root $DB_NAME mysql:8 mysqld --authentication_policy=mysql_native_password",
+    "mysql:stop": "docker container stop mysql-sandbox",
+    "mysql:shell": "docker exec -it mysql-sandbox mysql",
+    "mysql:copy": "docker cp ./schema/. mysql-sandbox:/ && docker cp ./queries/. mysql-sandbox:/",
+    "mysql:seed": "docker exec -d mysql-sandbox mysql -u root -e 'source schema.sql' && docker exec -d mysql-sandbox mysql -u root -e 'source seed.sql'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "chai": "^4.3.6",
+    "mocha": "^10.0.0",
+    "mysql2": "^2.3.3"
+  },
+  "dependencies": {
+    "inquirer": "^8.2.4",
+    "mysql": "^2.18.1"
+  }
+}
